@@ -15,14 +15,6 @@ Grab the latest build of Spotify2MP3 from the [Releases page](https://github.com
 - **Windows**: Download the ZIP, extract, and run `Spotify2MP3.exe`  
 - **macOS**: Download the ZIP, unzip, and open `Spotify2MP3.app`  
 
-> ### macOS: "cannot be opened" warning
-> macOS blocks apps not distributed through the App Store. To open it:
-> 1. **Right-click** (or Control-click) `Spotify2MP3.app`
-> 2. Click **Open**
-> 3. Click **Open** again in the dialog
->
-> You only need to do this once.
-
 ---
 
 ##  How to Use
