@@ -15,6 +15,12 @@ Grab the latest build of Spotify2MP3 from the [Releases page](https://github.com
 - **Windows**: Download the ZIP, extract, and run `Spotify2MP3.exe`  
 - **macOS**: Download the ZIP, unzip, and open `Spotify2MP3.app`  
 
+> **macOS "cannot be opened" warning?** Apple Gatekeeper blocks unsigned apps. Fix it with one command in Terminal:
+> ```sh
+> xattr -cr /path/to/Spotify2MP3.app
+> ```
+> Then double-click to open normally. Alternatively, right-click the app → **Open** → **Open** in the dialog.
+
 ---
 
 ##  How to Use

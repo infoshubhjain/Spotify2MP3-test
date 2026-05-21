@@ -38,6 +38,12 @@ jobs:
       - name: Build macOS app
         run: pyinstaller Spotify2MP3-macOS.spec --noconfirm
 
+      - name: Ad-hoc sign macOS app
+        run: codesign --deep --force --sign - dist/Spotify2MP3.app
+
+      - name: Remove quarantine attribute
+        run: xattr -cr dist/Spotify2MP3.app
+
       - name: Zip macOS app
         run: |
           cd dist
