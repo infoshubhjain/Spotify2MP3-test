@@ -413,10 +413,12 @@ class Spotify2MP3GUI:
         
         # Get the correct ffmpeg path
         if platform.system() == "Darwin":  # macOS
-            ffmpeg_path = resource_path("ffmpeg")
-            ffmpeg_exe = os.path.join(ffmpeg_path, "ffmpeg")
+            if hasattr(sys, '_MEIPASS'):
+                ffmpeg_exe = os.path.join(resource_path("ffmpeg"), "ffmpeg")
+            else:
+                ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
         elif platform.system() == "Linux":
-            ffmpeg_exe = "ffmpeg"
+            ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
         else:
             ffmpeg_path = resource_path("ffmpeg")
             ffmpeg_exe = os.path.join(ffmpeg_path, "ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg")
@@ -679,11 +681,15 @@ class Spotify2MP3GUI:
 
             base_dir = os.path.dirname(os.path.abspath(__file__))
             if platform.system() == "Darwin":
-                ffmpeg_exe = os.path.join(resource_path("ffmpeg"), "ffmpeg")
-                yt_dlp_exe = os.path.join(resource_path("yt-dlp"), "yt-dlp")
+                if hasattr(sys, '_MEIPASS'):
+                    ffmpeg_exe = os.path.join(resource_path("ffmpeg"), "ffmpeg")
+                    yt_dlp_exe = os.path.join(resource_path("yt-dlp"), "yt-dlp")
+                else:
+                    ffmpeg_exe = shutil.which("ffmpeg") or ""
+                    yt_dlp_exe = shutil.which("yt-dlp") or ""
             elif platform.system() == "Linux":
-                ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
-                yt_dlp_exe = shutil.which("yt-dlp") or "yt-dlp"
+                ffmpeg_exe = shutil.which("ffmpeg") or ""
+                yt_dlp_exe = shutil.which("yt-dlp") or ""
             else:
                 ffmpeg_exe = os.path.join(base_dir, "ffmpeg", "ffmpeg.exe")
                 yt_dlp_exe = os.path.join(base_dir, "yt-dlp", "yt-dlp.exe")

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 PYTHON=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
 
 # Kill any existing instance
@@ -10,6 +12,12 @@ pkill -f spotify2media.py 2>/dev/null && echo "Killed existing instance." || tru
 if ! command -v brew &>/dev/null; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Source Homebrew env in case the installer didn't modify PATH for this session
+    if [ -f /opt/homebrew/bin/brew ]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [ -f /usr/local/bin/brew ]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
 fi
 
 # Install ffmpeg and yt-dlp if missing
