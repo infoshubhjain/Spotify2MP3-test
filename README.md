@@ -17,6 +17,26 @@ Grab the latest build of Spotify2MP3 from the [Releases page](https://github.com
 
 ---
 
+## Run from Source (macOS)
+
+If you'd rather run directly from the repo instead of using a prebuilt release:
+
+```bash
+git clone https://github.com/infoshubhjain/Spotify2MP3-test.git
+cd Spotify2MP3-test
+./run.sh
+```
+
+`run.sh` fully automates setup — no manual installs needed:
+
+- Installs **Homebrew** if missing
+- Installs **ffmpeg** and **yt-dlp** via brew
+- Installs **Python 3.13** via pyenv (with tkinter) if not already present
+- Installs all Python dependencies
+- Launches the app
+
+---
+
 ##  How to Use
 
 1. **Export your CSV**  
@@ -50,7 +70,7 @@ It will fetch each track remuxing to M4A or re-encoding to MP3 VBR 0—automatic
 - **Any CSV** with the usual headers (`Track Name`, `Artist Name`, `Album Name`) will work.  
 - **M4A mode** uses the original AAC stream (usually capped at 128 kbps).  
 - **MP3 mode** always uses ffmpeg’s best VBR 0 setting for maximum quality.  
-- FFmpeg and yt-dlp are bundled—no extra installs.  
+- FFmpeg and yt-dlp are bundled in prebuilt releases. When running from source, `run.sh` installs them automatically.  
 - If a track fails, tweak its title/artist or flip settings and retry.
 
 ---
