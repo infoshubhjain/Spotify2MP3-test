@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.pyenv/bin:$PATH"
 
-PYTHON=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+PYTHON_VERSION=3.13.3
+PYTHON=""
 
 # Kill any existing instance
 pkill -f spotify2media.py 2>/dev/null && echo "Killed existing instance." || true
@@ -28,12 +29,30 @@ for tool in ffmpeg yt-dlp; do
     fi
 done
 
-# Install Python 3.13 (with tkinter) if missing
-if [ ! -f "$PYTHON" ]; then
-    echo "Installing Python 3.13..."
-    open https://www.python.org/ftp/python/3.13.7/python-3.13.7-macos11.pkg
-    echo "Please complete the Python installer, then re-run this script."
-    exit 0
+# Find or install Python 3.13
+if [ -f "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3" ]; then
+    PYTHON="/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
+elif command -v python3 &>/dev/null && python3 --version 2>&1 | grep -q "^Python 3\.13"; then
+    PYTHON="$(command -v python3)"
+else
+    echo "Python 3.13 not found. Installing via pyenv..."
+    brew install tcl-tk
+    if ! command -v pyenv &>/dev/null; then
+        brew install pyenv
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+    else
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+    fi
+    if ! pyenv versions --bare | grep -q "^${PYTHON_VERSION}$"; then
+        echo "Installing Python ${PYTHON_VERSION} (this may take a few minutes)..."
+        TCL_TK_PREFIX="$(brew --prefix tcl-tk)"
+        PYTHON_CONFIGURE_OPTS="--with-tcltk-includes=-I${TCL_TK_PREFIX}/include --with-tcltk-libs='-L${TCL_TK_PREFIX}/lib -ltcl8.6 -ltk8.6'" \
+            pyenv install "$PYTHON_VERSION"
+    fi
+    pyenv global "$PYTHON_VERSION"
+    PYTHON="$(pyenv which python3)"
 fi
 
 # Install Python dependencies
