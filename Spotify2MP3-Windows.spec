@@ -1,12 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['spotify2media.py'],
     pathex=[],
     binaries=[],
-    datas=[('ffmpeg/ffmpeg.exe', 'ffmpeg'), ('yt-dlp/yt-dlp.exe', 'yt-dlp'), ('config.json', '.'), ('icon.ico', '.')],
-    hiddenimports=[],
+    datas=[
+        ('ffmpeg/ffmpeg.exe', 'ffmpeg'),
+        ('yt-dlp/yt-dlp.exe', 'yt-dlp'),
+        ('config.json', '.'),
+        ('icon.ico', '.'),
+    ],
+    hiddenimports=[
+        'mutagen',
+        'mutagen.easyid3',
+        'mutagen.mp4',
+        'mutagen.id3',
+        'tkinterdnd2',
+        'selenium',
+        'selenium.webdriver',
+        'selenium.webdriver.chrome.service',
+        'webdriver_manager',
+        'webdriver_manager.chrome',
+        'bs4',
+        'requests',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

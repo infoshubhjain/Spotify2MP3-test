@@ -1,12 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['spotify2media.py'],
     pathex=[],
     binaries=[],
-    datas=[('ffmpeg/ffmpeg', 'ffmpeg'), ('yt-dlp/yt-dlp', 'yt-dlp'), ('config.json', '.'), ('icon.icns', '.')],
-    hiddenimports=[],
+    datas=[
+        ('ffmpeg/ffmpeg', 'ffmpeg'),
+        ('yt-dlp/yt-dlp', 'yt-dlp'),
+        ('config.json', '.'),
+        ('icon.icns', '.'),
+    ],
+    hiddenimports=[
+        'mutagen',
+        'mutagen.easyid3',
+        'mutagen.mp4',
+        'mutagen.id3',
+        'tkinterdnd2',
+        'selenium',
+        'selenium.webdriver',
+        'selenium.webdriver.chrome.service',
+        'webdriver_manager',
+        'webdriver_manager.chrome',
+        'bs4',
+        'requests',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -47,5 +64,9 @@ app = BUNDLE(
     coll,
     name='Spotify2MP3.app',
     icon='icon.icns',
-    bundle_identifier=None,
+    bundle_identifier='com.spotify2mp3.app',
+    info_plist={
+        'NSHighResolutionCapable': True,
+        'CFBundleShortVersionString': '1.0.0',
+    },
 )

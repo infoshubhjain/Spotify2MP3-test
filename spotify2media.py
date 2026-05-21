@@ -413,8 +413,7 @@ class Spotify2MP3GUI:
         
         # Get the correct ffmpeg path
         if platform.system() == "Darwin":  # macOS
-            ffmpeg_path = resource_path("ffmpeg")
-            ffmpeg_exe = os.path.join(ffmpeg_path, "ffmpeg")
+            ffmpeg_exe = os.path.join(resource_path("ffmpeg"), "ffmpeg")
         elif platform.system() == "Linux":
             ffmpeg_exe = "ffmpeg"
         else:
