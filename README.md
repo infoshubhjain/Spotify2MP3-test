@@ -2,18 +2,6 @@
 
 Spotify2MP3 is a cross-platform standalone app (Windows EXE, macOS .app) that takes a playlist CSV exported from Spotify via [Exportify](https://exportify.net), Apple Music/YouTube Music via [TuneMyMusic](https://tunemymusic.com), or any other service and batch downloads every track as **M4A** (remuxed at up to the original 128 kbps AAC bitrate) or **high-quality MP3** (VBR 0). Everything’s bundled, no Python or external installs required.
 
----
-
-##  Download
-
-CHECK OUT THE NEW VERSION : [CSVMUSIC](https://github.com/angall1/CSVMusic)
-
-- It features an improved song matching algorithm, a better UI, and more
-
-Grab the latest build of Spotify2MP3 from the [Releases page](https://github.com/angall1/Spotify2MP3/releases):
-
-- **Windows**: Download the ZIP, extract, and run `Spotify2MP3.exe`  
-- **macOS**: Download the ZIP, unzip, and open `Spotify2MP3.app`  
 
 ---
 
