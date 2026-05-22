@@ -39,20 +39,37 @@ cd Spotify2MP3-test
 
 ##  How to Use
 
-1. **Export your CSV**  
-   - Spotify → [Exportify](https://exportify.net)  
-   - Apple/YouTube/other → [TuneMyMusic](https://tunemymusic.com)  
-2. **Launch the app**.  
-3. **Drag & drop** your CSV (or click the box to browse).  
-4. **Select an output folder**.  
-5. (Optional) Click **Settings** to toggle:  
-   - **Transcode to MP3 (VBR 0)**  
-   - **Generate M3U playlist**  
-   - **Exclude instrumental versions**  
-   - **Other tweaks**  
-6. Hit **Convert Playlist**.  
+1. **Export your CSV**
+   - Spotify → [Exportify](https://exportify.net)
+   - Apple Music/YouTube Music → [TuneMyMusic](https://tunemymusic.com)
+   - **YouTube Playlists** → [Sanish Tech CSV Exporter](https://sanishtech.com/tools/export-youtube-playlist-to-csv/) ⭐
+     - See **[YOUTUBE_PLAYLIST_GUIDE.md](YOUTUBE_PLAYLIST_GUIDE.md)** for detailed instructions
+2. **Launch the app**.
+3. **Drag & drop** your CSV (or click the box to browse).
+4. **Select an output folder**.
+5. (Optional) Click **Settings** to toggle:
+   - **Transcode to MP3 (VBR 0)**
+   - **Generate M3U playlist**
+   - **Exclude instrumental versions**
+   - **Other tweaks**
+6. Hit **Convert Playlist**.
 
 It will fetch each track remuxing to M4A or re-encoding to MP3 VBR 0—automatically tag title/artist/album/track number, and (if enabled) create a `.m3u` file.
+
+---
+
+##  YouTube Playlists
+
+Want to download YouTube playlists? Check out the complete guide:
+
+📖 **[YouTube Playlist Download Guide](YOUTUBE_PLAYLIST_GUIDE.md)**
+
+This guide includes:
+- Step-by-step instructions with screenshots
+- How to export YouTube playlists to CSV
+- Troubleshooting common issues
+- Tips for best results
+- FAQ and example workflows
 
 ---
 

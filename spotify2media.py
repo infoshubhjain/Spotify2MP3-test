@@ -26,9 +26,6 @@ from pathlib import PureWindowsPath
 import webbrowser
 import platform
 
-DEFAULT_DROP_BG = '#e0e0e0'
-LOADED_DROP_BG  = '#c0ffc0'
-
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
@@ -81,19 +78,36 @@ class Spotify2MP3GUI:
     def __init__(self, root):
         self.root = root
         self.root.title('Spotify2MP3')
-        self.root.geometry('540x650')
-        self.root.minsize(300, 500)
+        self.root.geometry('700x800')
+        self.root.minsize(700, 800)
         self.csv_path = None
         self.output_folder = None
         self.last_output_dir = None
         self.deep_search_var = tk.BooleanVar(value=True)
-        
+
+        # Minimal color scheme - clean blacks, whites, grays only
+        self.colors = {
+            'bg': '#ffffff',
+            'secondary_bg': '#fafafa',
+            'text': '#000000',
+            'text_secondary': '#666666',
+            'text_tertiary': '#999999',
+            'border': '#e5e5e5',
+            'border_dark': '#000000',
+            'hover_bg': '#f5f5f5',
+            'input_bg': '#fafafa',
+            'disabled': '#e0e0e0'
+        }
+
+        # Configure root background
+        self.root.configure(bg=self.colors['bg'])
+
         # Set initial directory to Downloads folder
         if platform.system() == "Windows":
             self.last_directory = os.path.join(os.path.expanduser("~"), "Downloads")
         else:
             self.last_directory = os.path.expanduser("~/Downloads")
-            
+
         self.config = load_config()
         self.exclude_instr_var = tk.BooleanVar(value=self.config.get("exclude_instrumentals", False))
 
@@ -128,123 +142,351 @@ class Spotify2MP3GUI:
         if not DND_AVAILABLE:
             Tooltip(self.drop_frame, 'Drag & drop not available\nInstall tkinterdnd2 to enable.')
 
+    def create_styled_button(self, parent, text, command, style='primary', state=tk.NORMAL, width=None):
+        """Create a minimal styled button"""
+        if style == 'primary':
+            bg = self.colors['text']
+            fg = self.colors['bg']
+            active_bg = '#333333'
+            bd = 0
+        else:
+            bg = self.colors['bg']
+            fg = self.colors['text']
+            active_bg = self.colors['hover_bg']
+            bd = 1
+
+        btn = tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=bg,
+            fg=fg,
+            activebackground=active_bg,
+            activeforeground=fg,
+            font=('SF Pro Display', 12) if platform.system() == 'Darwin' else ('Segoe UI', 12),
+            relief=tk.FLAT,
+            cursor='hand2',
+            padx=24,
+            pady=12,
+            state=state,
+            width=width,
+            bd=bd,
+            highlightthickness=1 if bd else 0,
+            highlightbackground=self.colors['border'] if bd else self.colors['text']
+        )
+        return btn
+
+    def create_section_header(self, parent, text):
+        """Create a minimal section header"""
+        frame = tk.Frame(parent, bg=self.colors['bg'])
+        frame.pack(fill='x', padx=50, pady=(30, 12))
+
+        label = tk.Label(
+            frame,
+            text=text,
+            font=('SF Pro Display', 11, 'bold') if platform.system() == 'Darwin' else ('Segoe UI', 11, 'bold'),
+            fg=self.colors['text'],
+            bg=self.colors['bg'],
+            anchor='w'
+        )
+        label.pack(side='left')
+        return frame
+
+    def create_info_link(self, parent, title, url):
+        """Create a minimal clickable link"""
+        label = tk.Label(
+            parent,
+            text=title,
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            fg=self.colors['text_secondary'],
+            bg=self.colors['bg'],
+            cursor='hand2',
+            anchor='w'
+        )
+        label.pack(fill='x', padx=50, pady=4)
+        label.bind('<Button-1>', lambda e: webbrowser.open(url))
+
+        # Minimal hover effect
+        def on_enter(e):
+            label.configure(fg=self.colors['text'])
+
+        def on_leave(e):
+            label.configure(fg=self.colors['text_secondary'])
+
+        label.bind('<Enter>', on_enter)
+        label.bind('<Leave>', on_leave)
+
+        return label
+
     def setup_ui(self):
-        instr = tk.Label(self.root, text='Download Spotify CSV via Exportify: https://exportify.net/', fg='blue', cursor='hand2',font=("Arial", 12))
-        Tooltip(instr, 'Use this link for downloading Spotify playlists.')
-        instr.pack(fill='x', padx=20)
-        instr.bind('<Button-1>', lambda e: webbrowser.open('https://exportify.net/'))
-        instr2 = tk.Label(self.root, text='Download other CSVs (Apple Music, Youtube Music, etc) \n via TuneMyMusic: https://tunemymusic.com/transfer/', fg='blue', cursor='hand2',font=("Arial", 12))
-        Tooltip(instr2, 'Use this link for downloading from any other platform or for Spotify albums')
-        instr2.pack(fill='x', padx=20)
-        instr2.bind('<Button-1>', lambda e: webbrowser.open('https://www.tunemymusic.com/transfer/apple-music-to-file'))
+        # Create scrollable container
+        canvas = tk.Canvas(self.root, bg=self.colors['bg'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.colors['bg'])
 
-        # CSV Input
-        tk.Label(self.root, text='1) Drag and drop CSV File:', anchor='w').pack(fill='x', padx=20)
-        tk.Label(self.root, text='The playlist name will be the same as the CSV filename.', anchor='w').pack(fill='x', padx=20)
-        self.drop_frame = tk.Frame(self.root, bg='#e0e0e0', height=60, width= 400)
-        self.drop_frame.pack(pady=5, padx=20, expand=False)
-        self.drop_frame.pack_propagate(False)  
-        self.drop_label = tk.Label(self.drop_frame, text='CSV file: None', bg='#e0e0e0', font=("Arial", 12), wraplength=380, justify='center')
-        self.drop_label.pack(expand=True, fill='both')
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Title Section - Minimal
+        title_frame = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        title_frame.pack(fill='x', pady=(40, 10))
+
+        title = tk.Label(
+            title_frame,
+            text='Spotify2MP3',
+            font=('SF Pro Display', 28) if platform.system() == 'Darwin' else ('Segoe UI', 28),
+            fg=self.colors['text'],
+            bg=self.colors['bg']
+        )
+        title.pack()
+
+        subtitle = tk.Label(
+            title_frame,
+            text='Convert playlists to high-quality audio',
+            font=('SF Pro Display', 13) if platform.system() == 'Darwin' else ('Segoe UI', 13),
+            fg=self.colors['text_secondary'],
+            bg=self.colors['bg']
+        )
+        subtitle.pack(pady=(4, 0))
+
+        # Divider line
+        divider = tk.Frame(scrollable_frame, bg=self.colors['border'], height=1)
+        divider.pack(fill='x', padx=50, pady=(30, 0))
+
+        # Export Links Section
+        self.create_section_header(scrollable_frame, 'EXPORT PLAYLIST')
+
+        self.create_info_link(
+            scrollable_frame,
+            'Spotify → Exportify.net',
+            'https://exportify.net/'
+        )
+
+        self.create_info_link(
+            scrollable_frame,
+            'Apple Music / YouTube Music → TuneMyMusic',
+            'https://www.tunemymusic.com/transfer/apple-music-to-file'
+        )
+
+        self.create_info_link(
+            scrollable_frame,
+            'YouTube Playlist → Sanish Tech',
+            'https://sanishtech.com/tools/export-youtube-playlist-to-csv/'
+        )
+
+        # CSV Upload Section
+        self.create_section_header(scrollable_frame, 'IMPORT CSV')
+
+        csv_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        csv_container.pack(fill='x', padx=50, pady=15)
+
+        self.drop_frame = tk.Frame(
+            csv_container,
+            bg=self.colors['input_bg'],
+            height=120,
+            highlightbackground=self.colors['border'],
+            highlightthickness=1,
+            cursor='hand2'
+        )
+        self.drop_frame.pack(fill='x')
+        self.drop_frame.pack_propagate(False)
+
+        self.drop_label = tk.Label(
+            self.drop_frame,
+            text='Drop CSV file here or click to browse',
+            bg=self.colors['input_bg'],
+            font=('SF Pro Display', 12) if platform.system() == 'Darwin' else ('Segoe UI', 12),
+            fg=self.colors['text_tertiary'],
+            justify='center'
+        )
+        self.drop_label.pack(expand=True)
         self.drop_label.bind('<Button-1>', self.browse_csv)
-        Tooltip(self.drop_label, 'Drop your playlist CSV here or click to browse.')
 
+        self.clear_button = self.create_styled_button(
+            csv_container,
+            'Clear',
+            self.clear_selection,
+            style='secondary',
+            state=tk.DISABLED
+        )
+        self.clear_button.pack(pady=(12, 0))
 
-        #CSV clear
-        self.clear_button = tk.Button(self.root, text='Clear CSV', command=self.clear_selection, state=tk.DISABLED)
-        self.clear_button.pack()
-        
-        # Output folder
-        tk.Label(self.root, text='2) Output Folder:', anchor='w').pack(fill='x', padx=20)
-        tk.Label(self.root, text='This will be the folder the playlist files will be outputted into.', anchor='w').pack(fill='x', padx=20)
-        self.folder_button = tk.Button(self.root, text='Choose Output Folder', command=self.select_output_folder, font=('Arial', 12))
-        self.folder_button.pack(pady=5)
-        self.output_label = tk.Label(self.root, text='Output folder: Not selected', anchor='w',)
-        self.output_label.pack(fill='x', padx=20)
-        Tooltip(self.folder_button, 'Where files will be saved.')
-        
+        # Output Folder Section
+        self.create_section_header(scrollable_frame, 'OUTPUT FOLDER')
 
-        # Conversion options
-    
+        output_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        output_container.pack(fill='x', padx=50, pady=15)
 
-        tk.Label(self.root, text='3) Conversion Options:', anchor='w').pack(fill='x', padx=20)
+        self.folder_button = self.create_styled_button(
+            output_container,
+            'Choose Folder',
+            self.select_output_folder,
+            style='secondary'
+        )
+        self.folder_button.pack()
+
+        self.output_label = tk.Label(
+            output_container,
+            text='No folder selected',
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            fg=self.colors['text_tertiary'],
+            bg=self.colors['bg'],
+            anchor='w'
+        )
+        self.output_label.pack(fill='x', pady=(12, 0))
+
+        # Options Section
+        self.create_section_header(scrollable_frame, 'OPTIONS')
+
+        options_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        options_container.pack(fill='x', padx=50, pady=15)
+
+        # Variables
         self.mp3_var = tk.BooleanVar(value=False)
-        self.mp3_check = tk.Checkbutton(self.root, text='Transcode to MP3 (for MP3-only players)', variable=self.mp3_var)
-        self.mp3_check.pack(pady=2)
-        #Deep search
-        self.deep_search_check = tk.Checkbutton(self.root,text="Deep Search",variable=self.deep_search_var )
-        self.deep_search_check.pack(fill='x', padx=20)
-        Tooltip(
-            self.deep_search_check,
-            "When ON: does a slower, JSON‐based 3-result search+scoring for max accuracy. Takes approx. 20s per song.\n"
-            "When OFF: does a fast single-result search (good for popular tracks). Takes approx. 3s per song")
-        Tooltip(self.mp3_check, 'Enable to re-encode into MP3. Default is M4A remux.')
         self.quality_var = tk.BooleanVar(value=True)
-        self.quality_check = tk.Checkbutton(self.root, text='High quality (VBR0)', variable=self.quality_var)
-        self.quality_check.pack(pady=2)
-        Tooltip(self.quality_check, 'Only applies when transcoding to MP3.')
         self.m3u_var = tk.BooleanVar(value=True)
-        self.m3u_check = tk.Checkbutton(self.root, text='Generate M3U playlist', variable=self.m3u_var)
-        self.m3u_check.pack(pady=2)
-        Tooltip(self.m3u_check, 'Create a .m3u playlist file.')
         self.thumb_var = tk.BooleanVar(value=False)
-        self.thumb_check = tk.Checkbutton(self.root, text='Embed thumbnails as cover art', variable=self.thumb_var, command=self.update_artwork_options)
-        self.thumb_check.pack(pady=2)
-        Tooltip(self.thumb_check, 'Fetch and embed video thumbnails into the audio file.')
-
-        # Spotify album art option
         self.spotify_art_var = tk.BooleanVar(value=False)
-        self.spotify_art_check = tk.Checkbutton(self.root, text='Get and embed album art from Spotify link (Requires Chrome or Firefox)', variable=self.spotify_art_var, command=self.update_artwork_options)
-        self.spotify_art_check.pack(pady=2)
-        Tooltip(self.spotify_art_check, 'Download album art from Spotify using spotifycover.art')
-        
-        # Spotify link input
-        self.spotify_link_frame = tk.Frame(self.root)
-        self.spotify_link_frame.pack(fill='x', padx=20)
-        self.spotify_link_label = tk.Label(self.spotify_link_frame, text='Spotify Link:')
-        self.spotify_link_label.pack(side='left')
-        self.spotify_link_entry = tk.Entry(self.spotify_link_frame)
-        self.spotify_link_entry.pack(side='left', fill='x', expand=True, padx=(5,0))
+
+        # Deep Search
+        self.deep_search_check = tk.Checkbutton(
+            options_container,
+            text='Deep Search',
+            variable=self.deep_search_var,
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            bg=self.colors['bg'],
+            activebackground=self.colors['bg'],
+            fg=self.colors['text'],
+            selectcolor=self.colors['bg'],
+            cursor='hand2',
+            bd=0,
+            highlightthickness=0
+        )
+        self.deep_search_check.pack(anchor='w', pady=6)
+
+        # Embed Thumbnails
+        self.thumb_check = tk.Checkbutton(
+            options_container,
+            text='Embed Thumbnails',
+            variable=self.thumb_var,
+            command=self.update_artwork_options,
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            bg=self.colors['bg'],
+            activebackground=self.colors['bg'],
+            fg=self.colors['text'],
+            selectcolor=self.colors['bg'],
+            cursor='hand2',
+            bd=0,
+            highlightthickness=0
+        )
+        self.thumb_check.pack(anchor='w', pady=6)
+
+        # Spotify Album Art
+        self.spotify_art_check = tk.Checkbutton(
+            options_container,
+            text='Spotify Album Art',
+            variable=self.spotify_art_var,
+            command=self.update_artwork_options,
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            bg=self.colors['bg'],
+            activebackground=self.colors['bg'],
+            fg=self.colors['text'],
+            selectcolor=self.colors['bg'],
+            cursor='hand2',
+            bd=0,
+            highlightthickness=0
+        )
+        self.spotify_art_check.pack(anchor='w', pady=6)
+
+        # Spotify Link Entry
+        self.spotify_link_frame = tk.Frame(options_container, bg=self.colors['bg'])
+        self.spotify_link_entry = tk.Entry(
+            self.spotify_link_frame,
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            relief=tk.FLAT,
+            highlightbackground=self.colors['border'],
+            highlightthickness=1,
+            bg=self.colors['input_bg'],
+            fg=self.colors['text']
+        )
+        self.spotify_link_entry.pack(fill='x', ipady=8, padx=1, pady=1)
         self.spotify_link_entry.insert(0, 'https://open.spotify.com/playlist/')
         self.spotify_link_frame.pack_forget()
-        self.spotify_link_entry.config(state='normal')
         self.spotify_art_var.trace_add('write', self.toggle_spotify_link)
-        Tooltip(self.spotify_link_entry, 'Enter Spotify playlist/album link')
 
+        # Hidden checkboxes for settings
+        self.mp3_check = tk.Checkbutton(text='Transcode to MP3', variable=self.mp3_var)
+        self.quality_check = tk.Checkbutton(text='High quality', variable=self.quality_var)
+        self.m3u_check = tk.Checkbutton(text='Generate M3U', variable=self.m3u_var)
+        self.spotify_link_label = tk.Label(text='')
 
-
-        # Settings button
-        self.settings_button = tk.Button(
-            self.root,
-            text="Settings",
-            command=self.open_settings
+        # Settings Button
+        self.settings_button = self.create_styled_button(
+            options_container,
+            'Advanced Settings',
+            self.open_settings,
+            style='secondary'
         )
-        self.settings_button.pack(pady=5)
+        self.settings_button.pack(pady=(12, 0))
 
+        # Divider
+        divider2 = tk.Frame(scrollable_frame, bg=self.colors['border'], height=1)
+        divider2.pack(fill='x', padx=50, pady=30)
 
-        self.convert_button = tk.Button(self.root, text='Convert Playlist', command=self.start_conversion, state=tk.DISABLED, font=('Arial', 14) )
-        self.convert_button.pack(pady=10)
+        # Convert Button
+        convert_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        convert_container.pack(fill='x', padx=50, pady=(0, 30))
 
+        self.convert_button = self.create_styled_button(
+            convert_container,
+            'Start Conversion',
+            self.start_conversion,
+            style='primary',
+            state=tk.DISABLED
+        )
+        self.convert_button.pack()
 
-        # Actions
-        tk.Label(self.root, text='4) Actions:', anchor='w').pack(fill='x', padx=20, pady=(10,0))
-    
+        # Progress Section
+        progress_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        progress_container.pack(fill='x', padx=50, pady=(0, 20))
 
-        # Progress
-        self.status_label = tk.Label(self.root, text='Status: Waiting...', anchor='w', font=('Arial', 12))
-        self.status_label.pack(fill='x', padx=20)
-        self.progress = ttk.Progressbar(self.root, orient='horizontal', length=500, mode='determinate')
-        self.progress.pack(pady=10)
+        self.status_label = tk.Label(
+            progress_container,
+            text='Waiting...',
+            font=('SF Pro Display', 11) if platform.system() == 'Darwin' else ('Segoe UI', 11),
+            fg=self.colors['text_secondary'],
+            bg=self.colors['bg'],
+            anchor='w'
+        )
+        self.status_label.pack(fill='x', pady=(0, 8))
 
-        #output folder
-        self.open_folder_button = tk.Button(self.root, text='Open Output Folder', command=self.open_output_folder)
-        self.open_folder_button.pack(pady=5)
-        Tooltip(self.open_folder_button, 'Open folder with converted files.')
+        self.progress = ttk.Progressbar(
+            progress_container,
+            orient='horizontal',
+            mode='determinate'
+        )
+        self.progress.pack(fill='x')
 
-        #hide useless buttons
-        self.mp3_check.pack_forget()
-        self.quality_check.pack_forget()
-        self.m3u_check.pack_forget()
+        # Open Folder Button
+        folder_container = tk.Frame(scrollable_frame, bg=self.colors['bg'])
+        folder_container.pack(fill='x', padx=50, pady=(20, 40))
+
+        self.open_folder_button = self.create_styled_button(
+            folder_container,
+            'Open Output Folder',
+            self.open_output_folder,
+            style='secondary'
+        )
+        self.open_folder_button.pack()
+
+        # Pack canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
     def toggle_spotify_link(self, *args):
         if self.spotify_art_var.get():
@@ -328,14 +570,16 @@ class Spotify2MP3GUI:
 
     def clear_selection(self):
         self.csv_path = None
-        self.drop_label.config(text='CSV file: None')
-        self.status_label.config(text='Status: Waiting...')
-        # ← reset:
-        self.drop_frame.config(bg=DEFAULT_DROP_BG)
-        self.drop_label.config(bg=DEFAULT_DROP_BG)
+        self.drop_label.config(text='Drop CSV file here or click to browse')
+        self.status_label.config(text='Waiting...')
+        self.drop_frame.config(
+            bg=self.colors['input_bg'],
+            highlightbackground=self.colors['border']
+        )
+        self.drop_label.config(bg=self.colors['input_bg'], fg=self.colors['text_tertiary'])
         self.progress['value'] = 0
         self.update_convert_button_state()
-    
+
     def browse_csv(self, event=None):
         path = filedialog.askopenfilename(
             initialdir=self.last_directory,
@@ -344,20 +588,28 @@ class Spotify2MP3GUI:
         if path:
             self.csv_path = path
             self.last_directory = os.path.dirname(path)
-            self.drop_label.config(text=f'CSV file: {os.path.basename(path)}')
-            self.status_label.config(text='CSV loaded.')
-            # ← highlight:
-            self.drop_frame.config(bg=LOADED_DROP_BG)
-            self.drop_label.config(bg=LOADED_DROP_BG)
+            self.drop_label.config(
+                text=f'{os.path.basename(path)}\n\nClick to change file',
+                fg=self.colors['text']
+            )
+            self.status_label.config(text='CSV file loaded successfully')
+            self.drop_frame.config(
+                bg=self.colors['secondary_bg'],
+                highlightbackground=self.colors['border_dark']
+            )
+            self.drop_label.config(bg=self.colors['secondary_bg'])
             self.update_convert_button_state()
 
     def select_output_folder(self):
         path = filedialog.askdirectory(initialdir=self.last_directory)
         if path:
             self.output_folder = path
-            self.last_directory = path  # Update last directory
-            self.output_label.config(text=f'Output folder: {path}')
-            self.status_label.config(text='Output folder selected.')
+            self.last_directory = path
+            self.output_label.config(
+                text=f'{path}',
+                fg=self.colors['text']
+            )
+            self.status_label.config(text='Output folder selected')
             self.update_convert_button_state()
 
     def open_output_folder(self):
@@ -368,11 +620,11 @@ class Spotify2MP3GUI:
             else:
                 subprocess.run(['open', target])
         else:
-            messagebox.showerror('Error', 'No valid folder to open.')
+            messagebox.showwarning('Warning', 'No valid folder to open.')
 
     def start_conversion(self):
         if not (self.csv_path and self.output_folder):
-            messagebox.showerror('Error', 'Select CSV and output folder.')
+            messagebox.showerror('Error', 'Please select both CSV file and output folder.')
             return
         self.convert_button.config(state=tk.DISABLED)
         self.clear_button.config(state=tk.DISABLED)
@@ -383,10 +635,16 @@ class Spotify2MP3GUI:
         path = event.data.strip('{}')
         if path.lower().endswith('.csv'):
             self.csv_path = path
-            self.drop_label.config(text=f'CSV file: {os.path.basename(path)}')
-            self.status_label.config(text='CSV loaded via drag.')
-            self.drop_frame.config(bg=LOADED_DROP_BG)
-            self.drop_label.config(bg=LOADED_DROP_BG)
+            self.drop_label.config(
+                text=f'{os.path.basename(path)}\n\nClick to change file',
+                fg=self.colors['text']
+            )
+            self.status_label.config(text='CSV file loaded via drag & drop')
+            self.drop_frame.config(
+                bg=self.colors['secondary_bg'],
+                highlightbackground=self.colors['border_dark']
+            )
+            self.drop_label.config(bg=self.colors['secondary_bg'])
             self.update_convert_button_state()
 
     def get_file_timestamps(self, file_path):
@@ -889,7 +1147,7 @@ class Spotify2MP3GUI:
             self.root.config(cursor='')
             self.convert_button.config(state=tk.NORMAL)
             self.clear_button.config(state=tk.NORMAL)
-            self.status_label.config(text=f"✅ Completed in {timedelta(seconds=int(time.time()-start_time))}")
+            self.status_label.config(text=f"Completed in {timedelta(seconds=int(time.time()-start_time))}")
             self.root.bell()
 
         except Exception as e:
@@ -927,6 +1185,30 @@ class Spotify2MP3GUI:
         else:
             self.thumb_check.config(state=tk.NORMAL)
             self.spotify_art_check.config(state=tk.NORMAL)
+
+    def fetch_spotify_album_art(self, output_dir):
+        """
+        Fetch album artwork from Spotify for all tracks in the playlist.
+
+        NOTE: This feature is currently not implemented. The function exists as a stub
+        to prevent crashes when the "Spotify Album Art" option is enabled.
+
+        To implement this feature, you would need to:
+        1. Parse the Spotify playlist URL from self.spotify_link_entry
+        2. Use Spotify Web API or web scraping to fetch album artwork
+        3. Download and save images as numbered .jpg files (e.g., "1_trackname.jpg")
+        4. Match the numbering with the CSV track order
+        """
+        messagebox.showwarning(
+            'Feature Not Implemented',
+            'Spotify Album Art fetching is not yet implemented.\n\n'
+            'This feature requires Spotify API integration. For now, please use '
+            'the "Embed Thumbnails" option instead, which downloads artwork from YouTube.'
+        )
+        # Disable the option after showing warning
+        self.spotify_art_var.set(False)
+        self.spotify_art_check.config(state=tk.DISABLED)
+        print("WARNING: fetch_spotify_album_art called but not implemented")
 
 
 if __name__ == '__main__':
