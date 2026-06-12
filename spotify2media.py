@@ -40,7 +40,8 @@ def load_config():
         "duration_max": 600,
         "transcode_mp3": "false",
         "generate_m3u": "true",
-        "exclude_instrumentals": "false"
+        "exclude_instrumentals": "false",
+        "cookies_path": ""
     }
     if os.path.isfile(CONFIG_FILE):
         try:
@@ -535,21 +536,54 @@ class Spotify2MP3GUI:
         )
         instr_cb.grid(row=5, column=1, sticky="w", padx=10)
 
+        # Cookies file (fixes "Sign in to confirm you're not a bot" errors)
+        tk.Label(win, text="Cookies file:").grid(row=6, column=0, sticky="w", padx=10, pady=(15,5))
+        cookies_var = tk.StringVar(value=self.config.get("cookies_path", ""))
+        cookies_frame = tk.Frame(win)
+        cookies_frame.grid(row=6, column=1, sticky="ew", padx=10, pady=(15,5))
+        cookies_entry = tk.Entry(cookies_frame, textvariable=cookies_var, width=30)
+        cookies_entry.pack(side="left", fill="x", expand=True)
+
+        def browse_cookies():
+            path = filedialog.askopenfilename(
+                parent=win,
+                title="Select cookies.txt file",
+                filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+            )
+            if path:
+                cookies_var.set(path)
+
+        def clear_cookies():
+            cookies_var.set("")
+
+        tk.Button(cookies_frame, text="Browse", command=browse_cookies).pack(side="left", padx=(4, 0))
+        tk.Button(cookies_frame, text="Clear", command=clear_cookies).pack(side="left", padx=(2, 0))
+
+        cookies_help = tk.Label(
+            win,
+            text="Export cookies.txt from your browser while logged into YouTube\n"
+                 "(use a browser extension like 'Get cookies.txt LOCALLY')",
+            fg="#666666", justify="left", wraplength=320
+        )
+        cookies_help.grid(row=7, column=1, sticky="w", padx=10, pady=(0, 10))
+
         # Buttons frame
         btn_frame = tk.Frame(win)
-        btn_frame.grid(row=6, column=0, columnspan=2, pady=10)
+        btn_frame.grid(row=8, column=0, columnspan=2, pady=10)
 
 
         def save():
             try:
                 variants = [v.strip() for v in variants_str.get().split(",") if v.strip()]
+                cp = cookies_var.get().strip()
                 cfg = {
                     "variants": variants,
                     "duration_min": int(min_var.get()),
                     "duration_max": int(max_var.get()),
                     "transcode_mp3": self.mp3_var.get(),
                     "generate_m3u": self.m3u_var.get(),
-                    "exclude_instrumentals": self.exclude_instr_var.get()
+                    "exclude_instrumentals": self.exclude_instr_var.get(),
+                    "cookies_path": cp
                 }
                 with open(CONFIG_FILE, "w") as f:
                     json.dump(cfg, f, indent=4)
